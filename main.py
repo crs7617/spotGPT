@@ -22,8 +22,13 @@ os.environ['SPOTIPY_CLIENT_SECRET'] = os.getenv('SPOTIPY_CLIENT_SECRET')
 # Initialize Spotify client
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials())
 
-# Define album ID
-album_id = '7D2NdGvBHIavgLhmcwhluK'
+@st.cache_data
+def get_artist_albums(artist_name):
+    results = sp.search(q=f'artist:{artist_name}', type='artist')
+    artist_id = results['artists']['items'][0]['id']
+    albums = sp.artist_albums(artist_id, album_type='album')
+    album_ids = [album['id'] for album in albums['items']]
+    return album_ids
 
 @st.cache_data
 def get_album_tracks(album_id):
@@ -46,9 +51,6 @@ def get_album_tracks(album_id):
         })
     return pd.DataFrame(track_data)
 
-# Get album tracks
-df = get_album_tracks(album_id)
-
 # Initialize SentenceTransformer model
 @st.cache_resource
 def load_sentence_model():
@@ -60,15 +62,6 @@ sentence_model = load_sentence_model()
 def create_embedding(row):
     text = f"{row['name']} by {row['artist']} from {row['album']}"
     return sentence_model.encode(text)
-
-# Create embeddings for each track
-df['embedding'] = df.apply(create_embedding, axis=1)
-
-# Create FAISS index
-embeddings = np.array(df['embedding'].tolist())
-dimension = embeddings.shape[1]
-index = faiss.IndexFlatL2(dimension)
-index.add(embeddings)
 
 # Initialize GPT-2 model and tokenizer
 @st.cache_resource
@@ -100,14 +93,30 @@ def rag_response(query, k=3):
     return response
 
 # Streamlit UI
-st.write("This app recommends Kanye West songs based on your query.")
-query = st.text_input("Enter your query:", "Recommend a Kanye West song")
+st.write("This app recommends songs based on your query.")
+artist_name = st.text_input("Enter the artist's name:", "Kanye West")
 
-if st.button("Get Recommendation"):
-    with st.spinner("Generating recommendation..."):
-        response = rag_response(query)
-    st.write(response)
+if st.button("Get Recommendations"):
+    with st.spinner("Generating recommendations..."):
+        album_ids = get_artist_albums(artist_name)
+        all_tracks = pd.DataFrame()
+        for album_id in album_ids:
+            album_tracks = get_album_tracks(album_id)
+            all_tracks = pd.concat([all_tracks, album_tracks], ignore_index=True)
+        
+        df = all_tracks
+        df['embedding'] = df.apply(create_embedding, axis=1)
+        
+        embeddings = np.array(df['embedding'].tolist())
+        dimension = embeddings.shape[1]
+        index = faiss.IndexFlatL2(dimension)
+        index.add(embeddings)
+        
+        query = st.text_input("Enter your query for song recommendation:", "Recommend a song")
+        
+        if query:
+            response = rag_response(query)
+            st.write(response)
 
-# Display album tracks
-st.subheader("Album Tracks")
-st.dataframe(df[['name', 'artist', 'album', 'popularity']])
+        st.subheader("Tracks by " + artist_name)
+        st.dataframe(df[['name', 'artist', 'album', 'popularity']])
