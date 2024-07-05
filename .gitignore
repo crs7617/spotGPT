@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Environment variables
+.env
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# VSCode
+.vscode/
+
+# Data files
+*.csv
+*.log
+*.sqlite3
+
+# Streamlit
+.streamlit/
+
+# Virtual environments
+venv/
+env/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Spotipy cache
+.cache
