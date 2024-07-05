@@ -128,4 +128,3 @@ With SpotGPT, dive into the world of music like never before. Discover, listen, 
 
 ---
 
-Feel free to personalize the README further with images, badges, and any additional information that would showcase the capabilities and appeal of SpotGPT.
