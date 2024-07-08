@@ -94,6 +94,12 @@ The core of SpotGPT's recommendation system is based on RAG, which combines retr
 3. **FAISS Indexing**: Embeddings are indexed using FAISS to enable fast and accurate similarity searches.
 4. **Contextual Generation**: GPT-2 generates personalized recommendations based on the retrieved tracks and user query.
 
+
+
+https://github.com/crs7617/spotGPT/assets/115174268/3c4773b5-dae8-4560-8d6c-51d968dc8e1a
+
+
+
 ### Streamlit Interface
 
 The entire user experience is crafted using Streamlit, making it easy to interact with SpotGPT and receive recommendations in real-time.
